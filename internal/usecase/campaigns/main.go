@@ -6,29 +6,32 @@ import (
 	"github.com/holgerson97/phish-engine/repository/rethinkdb"
 )
 
-func NewCampagin(c entity.Campaign) error {
-	client, err := rethinkdb.NewClient("localhost:28015")
+type Usecase struct {
+	repository *rethinkdb.Client
+}
+
+func New(url string) (*Usecase, error) {
+	client, err := rethinkdb.NewClient(url)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	return &Usecase{repository: client}, nil
+}
+
+func (usc *Usecase) AddCampagin(c entity.Campaign) error {
 	// Create the ID for the campaign
 	c.ID = uuid.New().String()
 
-	if err := client.AddCampaign(c); err != nil {
+	if err := usc.repository.AddCampaign(c); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func GetCampaigns(orgID string) ([]entity.Campaign, error) {
-	client, err := rethinkdb.NewClient("localhost:28015")
-	if err != nil {
-		return nil, err
-	}
-
-	campaigns, err := client.GetCampaigns(orgID)
+func (usc *Usecase) GetCampaigns(orgID string) ([]entity.Campaign, error) {
+	campaigns, err := usc.repository.GetCampaigns(orgID)
 	if err != nil {
 		return nil, err
 	}
