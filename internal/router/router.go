@@ -2,7 +2,6 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/holgerson97/phish-engine/entity"
@@ -38,8 +37,13 @@ func AddCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := campaigns.NewCampagin(campaign); err != nil {
-		fmt.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("failed creating campaign"))
+		return
+
 	}
+
+	return
 }
 
 func Run() error {

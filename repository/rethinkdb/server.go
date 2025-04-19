@@ -1,8 +1,6 @@
 package rethinkdb
 
 import (
-	"fmt"
-
 	"github.com/holgerson97/phish-engine/entity"
 	r "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
@@ -31,8 +29,6 @@ func (cl *Client) GetCampaigns(orgID string) ([]entity.Campaign, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println(resp.Interface())
 
 	var result []entity.Campaign
 	if err := resp.All(&result); err != nil {
