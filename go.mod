@@ -2,7 +2,10 @@ module github.com/holgerson97/phish-engine
 
 go 1.22.12
 
-require gopkg.in/rethinkdb/rethinkdb-go.v6 v6.2.2
+require (
+	github.com/google/uuid v1.6.0
+	gopkg.in/rethinkdb/rethinkdb-go.v6 v6.2.2
+)
 
 require (
 	github.com/golang/protobuf v1.3.4 // indirect
