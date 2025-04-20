@@ -1,0 +1,13 @@
+linters:
+  presets:
+    - bugs
+    - comment
+    - complexity
+    - error
+    - format
+    - import
+    - module
+    - performance
+    - style
+    - test
+    - unused
