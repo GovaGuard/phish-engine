@@ -44,7 +44,7 @@ func (router *Router) AddCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.usecase.AddCampagin(campaign); err != nil {
+	if err := router.usecase.AddCampaign(campaign); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed creating campaign"))
 		return

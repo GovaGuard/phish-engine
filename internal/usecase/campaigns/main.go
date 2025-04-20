@@ -19,7 +19,7 @@ func New(url string) (*Usecase, error) {
 	return &Usecase{repository: client}, nil
 }
 
-func (usc *Usecase) AddCampagin(c entity.Campaign) error {
+func (usc *Usecase) AddCampaign(c entity.Campaign) error {
 	// Create the ID for the campaign
 	c.ID = uuid.New().String()
 
