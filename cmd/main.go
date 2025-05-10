@@ -7,7 +7,7 @@ import (
 
 	"github.com/holgerson97/phish-engine/internal/db"
 	"github.com/holgerson97/phish-engine/internal/router"
-	"github.com/holgerson97/phish-engine/internal/usecase/campaigns"
+	"github.com/holgerson97/phish-engine/internal/usecase"
 	"github.com/holgerson97/phish-engine/pkg/info"
 )
 
@@ -27,7 +27,7 @@ func main() {
 	}
 	log.Print("DB Connected")
 
-	usecase, err := campaigns.New(*rethinkDB)
+	usecase, err := usecase.New(*rethinkDB)
 	if err != nil {
 		return
 	}

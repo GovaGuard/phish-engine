@@ -32,5 +32,12 @@ func New(url string) (*r.Session, error) {
 		}
 	}
 
+	if !slices.Contains(tables, "targets") {
+		_, err = r.TableCreate("targets").Run(session)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return session, nil
 }
