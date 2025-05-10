@@ -13,12 +13,3 @@ type Campaign struct {
 	SuccessRate    int16     `binding:"required" json:"success_rate" rethinkdb:"success_rate"`
 	Targets        []Target  `binding:"required" json:"targets" rethinkdb:"targets"`
 }
-
-type Target struct {
-	ID             string
-	OrganizationID string
-	EMail          string
-	FirstName      string
-	SurName        string
-	State          string
-}
