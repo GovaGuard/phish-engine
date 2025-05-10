@@ -38,3 +38,11 @@ func (usc *Usecase) GetCampaigns(orgID string) ([]entity.Campaign, error) {
 
 	return campaigns, nil
 }
+
+func (usc *Usecase) DeleteCampaign(id string) error {
+	if err := usc.DeleteCampaign(id); err != nil {
+		return err
+	}
+
+	return nil
+}
