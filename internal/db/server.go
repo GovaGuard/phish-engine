@@ -25,8 +25,8 @@ func New(url string) (*r.Session, error) {
 		return nil, err
 	}
 
-	if !slices.Contains(tables, "Campaigns") {
-		_, err = r.TableCreate("Campaigns").Run(session)
+	if !slices.Contains(tables, "campaigns") {
+		_, err = r.TableCreate("campaigns").Run(session)
 		if err != nil {
 			return nil, err
 		}
