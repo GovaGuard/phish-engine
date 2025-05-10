@@ -30,7 +30,7 @@ func (cl *Client) GetCampaigns(orgID string) ([]entity.Campaign, error) {
 		return nil, err
 	}
 
-	var result []entity.Campaign
+	result := []entity.Campaign{}
 	if err := resp.All(&result); err != nil {
 		return nil, err
 	}
@@ -45,4 +45,18 @@ func (cl *Client) AddCampaign(c entity.Campaign) error {
 	}
 
 	return nil
+}
+
+func (cl *Client) DeleteCampaign(id string) ([]entity.Campaign, error) {
+	resp, err := r.Table(campgainTable).Filter(r.Row.Field("id").Eq(id)).Delete().Run(cl)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []entity.Campaign
+	if err := resp.All(&result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
