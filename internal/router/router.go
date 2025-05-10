@@ -25,6 +25,7 @@ func New(c *campaigns.Usecase) Router {
 }
 
 // TODO: Make function type safety
+// Issue URL: https://github.com/GovaGuard/phish-engine/issues/5
 func ParseOrganization(token string) (string, error) {
 	url := "https://development-8jjgdu.us1.zitadel.cloud/oidc/v1/userinfo"
 	req, err := http.NewRequest(http.MethodGet, url, nil)
