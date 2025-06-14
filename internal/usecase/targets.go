@@ -15,7 +15,7 @@ func (usc *Usecase) AddTarget(org string, t []entity.Target) ([]entity.Target, e
 	}
 
 	fmt.Println(t)
-	result, err := usc.repository.AddTarget(t)
+	result, err := usc.targetRepository.AddTargets(t)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (usc *Usecase) AddTarget(org string, t []entity.Target) ([]entity.Target, e
 }
 
 func (usc *Usecase) GetTargets(orgID string) ([]entity.Target, error) {
-	targets, err := usc.repository.GetTargets(orgID)
+	targets, err := usc.targetRepository.GetTargets(orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (usc *Usecase) GetTargets(orgID string) ([]entity.Target, error) {
 }
 
 func (usc *Usecase) DeleteTarget(id string) error {
-	err := usc.repository.DeleteTarget(id)
+	err := usc.targetRepository.DeleteTarget(id)
 	if err != nil {
 		return err
 	}
