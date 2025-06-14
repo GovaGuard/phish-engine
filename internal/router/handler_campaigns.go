@@ -2,7 +2,6 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -57,14 +56,12 @@ func (router *Router) AddCampaign(w http.ResponseWriter, r *http.Request) {
 func (router *Router) DeleteCampaign(w http.ResponseWriter, r *http.Request) {
 	campaignID := r.PathValue("id")
 
-	if err := router.usecase.DeleteCampaign(campaignID); err != nil {
+	err := router.usecase.DeleteCampaign(campaignID)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("failed creating campaign"))
+		w.Write([]byte("failed deleting campaign"))
 		return
-
 	}
-
-	w.Write([]byte(fmt.Sprintf("delete %s succesfully", campaignID)))
 
 	return
 }
