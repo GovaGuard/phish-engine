@@ -9,6 +9,7 @@ import (
 
 const (
 	boundary      = "\r\n--mail-boundary\r\n"
+	boundaryClose = "\r\n--mail-boundary--\r\n"
 	boundaryIdent = "mail-boundary"
 )
 
@@ -46,12 +47,12 @@ func NewPlainMail(sender, subject, body string, to []string) Mail {
 	buf.WriteString(fmt.Sprintf("To: %s\r\n", strings.Join(to, ";")))
 	buf.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
 	buf.WriteString("MIME-Version: 1.0\r\n")
-	buf.WriteString(fmt.Sprintf("Content-Type: text/plain; boundary=%s\n", boundaryIdent))
+	buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\n", boundaryIdent))
 
 	buf.WriteString(boundary)
 	buf.WriteString("Content-Type: text/plain; charset=\"utf-8\"\r\n")
 	buf.WriteString(fmt.Sprintf("\r\n%s", body))
-	buf.WriteString(boundary)
+	buf.WriteString(boundaryClose)
 
 	return Mail{Sender: sender, To: to, Subject: subject, Body: buf.Bytes()}
 }
@@ -75,9 +76,7 @@ func NewPlainMailWithAttachement(sender, subject, body string, to []string, file
 	buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\r\n", file.Name))
 	buf.WriteString(fmt.Sprintf("Content-ID: %s\r\n\r\n", file.Name))
 	buf.Write(file.Base64Content)
-	buf.WriteString(boundary)
-
-	buf.WriteString("--")
+	buf.WriteString(boundaryClose)
 
 	return Mail{Sender: sender, To: to, Subject: subject, Body: buf.Bytes()}
 }
