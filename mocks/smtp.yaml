@@ -1,0 +1,9 @@
+smtp: '1.0'
+info:
+  title: Mokapi's Mail Server
+servers: 
+- url: smtp://127.0.0.1:25
+mailboxes:
+  - name: mock@phish-engine.com
+    username: mock 
+    password: mock 
