@@ -1,42 +1,62 @@
 package rethinkdb
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/holgerson97/phish-engine/entity"
-	r "gopkg.in/rethinkdb/rethinkdb-go.v6"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const targetTable = "targets"
 
 func (cl *Client) GetTargets(orgID string) ([]entity.Target, error) {
-	resp, err := r.Table(targetTable).Filter(r.Row.Field("organization_id").Eq(orgID)).Run(cl)
+	coll := cl.Client.Database("main").Collection(targetTable)
+	filter := bson.D{{Key: "organization_id", Value: orgID}}
+
+	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
 
 	result := []entity.Target{}
-	if err := resp.All(&result); err != nil {
-		return nil, err
+	if err := cursor.All(context.TODO(), &result); err != nil {
+		return nil, fmt.Errorf("parsing target to entity: %w", err)
 	}
 
 	return result, nil
 }
 
-func (cl *Client) AddTarget(t []entity.Target) ([]entity.Target, error) {
-	resp, err := r.Table(targetTable).Insert(t).Run(cl)
+func (cl *Client) AddTargets(t []entity.Target) ([]entity.Target, error) {
+	coll := cl.Client.Database("main").Collection(targetTable)
+
+	_, err := coll.InsertOne(context.TODO(), t)
 	if err != nil {
-		return nil, err
+		return []entity.Target{}, fmt.Errorf("adding target: %w", err)
 	}
 
-	result := []entity.Target{}
-	if err := resp.All(&result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
+	return t, nil
 }
 
 func (cl *Client) DeleteTarget(id string) error {
-	_, err := r.Table(targetTable).Filter(r.Row.Field("id").Eq(id)).Delete().Run(cl)
+	coll := cl.Client.Database("main").Collection(targetTable)
+	filter := bson.D{{Key: "id", Value: id}}
+
+	_, err := coll.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cl *Client) ChangeTargetState(id string, state entity.TargetState) error {
+	coll := cl.Client.Database("main").Collection(targetTable)
+	filter := bson.D{{Key: "id", Value: id}}
+
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: state}}}}
+
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return err
 	}

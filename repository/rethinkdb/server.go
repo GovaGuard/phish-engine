@@ -1,62 +1,35 @@
 package rethinkdb
 
 import (
-	"github.com/holgerson97/phish-engine/entity"
-	r "gopkg.in/rethinkdb/rethinkdb-go.v6"
+	"context"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Client struct {
-	*r.Session
+	*mongo.Client
 }
 
-const (
-	campgainTable = "campaigns"
-)
-
-func NewClient(url string) (*Client, error) {
-	session, err := r.Connect(r.ConnectOpts{
-		Address: url,
-	})
+func NewClient(ctx context.Context, uri string) (*Client, error) {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{session}, nil
+	return &Client{client}, nil
 }
 
-func (cl *Client) GetCampaigns(orgID string) ([]entity.Campaign, error) {
-	resp, err := r.Table(campgainTable).Filter(r.Row.Field("organization_id").Eq(orgID)).Run(cl)
-	if err != nil {
-		return nil, err
+func (c *Client) Setup() error {
+	db := c.Client.Database("main")
+
+	if err := db.CreateCollection(context.TODO(), campgainTable); err != nil {
+		return err
 	}
 
-	result := []entity.Campaign{}
-	if err := resp.All(&result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-}
-
-func (cl *Client) AddCampaign(c entity.Campaign) error {
-	_, err := r.Table(campgainTable).Insert(c).Run(cl)
-	if err != nil {
+	if err := db.CreateCollection(context.TODO(), targetTable); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (cl *Client) DeleteCampaign(id string) ([]entity.Campaign, error) {
-	resp, err := r.Table(campgainTable).Filter(r.Row.Field("id").Eq(id)).Delete().Run(cl)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []entity.Campaign
-	if err := resp.All(&result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }
