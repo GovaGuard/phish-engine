@@ -34,6 +34,7 @@ func main() {
 	log.Print("DB Connected")
 
 	// TODO: call constructor
+	// Issue URL: https://github.com/GovaGuard/phish-engine/issues/11
 	m := mail.Sender{
 		Sender:     *sender,
 		User:       *username,
