@@ -1,8 +1,11 @@
 package usecase_test
 
 import (
+	"html/template"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/holgerson97/phish-engine/entity"
 	"github.com/holgerson97/phish-engine/internal/mail"
 	"github.com/holgerson97/phish-engine/internal/usecase"
@@ -26,7 +29,13 @@ func campaignUsecase(t *testing.T) (*usecase.Usecase, *MockCampaignRepo) {
 	repo := NewMockCampaignRepo(mockCtl)
 	targetRepo := NewMockTargetsRepo(mockCtl)
 
-	usc := usecase.New(repo, targetRepo, mail.Sender{})
+	usc := usecase.New(repo, targetRepo, mail.Sender{
+		Sender:     "mock@phish-engine.com",
+		User:       "mock",
+		Password:   "mock",
+		Host:       "127.0.0.1",
+		SMTPServer: "127.0.0.1:2525",
+	})
 
 	return usc, repo
 }
@@ -38,7 +47,7 @@ func Test_AddCampaign(t *testing.T) {
 	tests := []test{{
 		name: "Simple",
 		mock: func() {
-			repo.EXPECT().AddCampaign(c).Return(nil)
+			repo.EXPECT().AddCampaign(c).Return(c, nil)
 		},
 		res: c,
 		err: nil,
@@ -47,7 +56,7 @@ func Test_AddCampaign(t *testing.T) {
 	for _, v := range tests {
 		t.Run(v.name, func(t *testing.T) {
 			v.mock()
-			err := usc.AddCampaign(c)
+			_, err := usc.AddCampaign(c)
 
 			require.ErrorIs(t, err, v.err)
 		})
@@ -104,96 +113,63 @@ func Test_GetActiveCampaigns(t *testing.T) {
 
 func TestUsecase_WorkCampaigns(t *testing.T) {
 	usc, repo := campaignUsecase(t)
-	c := []entity.Campaign{{}}
+	tmpl, err := template.New("simpel").Parse("COLL")
+	if err != nil {
+		t.Fatal("template cannot be parsed")
+	}
+
+	empty := []entity.Campaign{}
+	simple := []entity.Campaign{{
+		ID:             uuid.NewString(),
+		CreatorID:      uuid.NewString(),
+		OrganizationID: uuid.NewString(),
+		Title:          "Simple",
+		Status:         entity.CampaignPlanned,
+		StartDate:      time.Now(),
+		EndDate:        time.Now().Add(time.Second * 15),
+		SuccessRate:    0,
+		Targets: []entity.Target{{
+			ID:             uuid.NewString(),
+			OrganizationID: uuid.NewString(),
+			EMail:          "mail@phish-engine.com",
+			Firstname:      "Gova",
+			Surname:        "Guard",
+			State:          0,
+		}},
+		Attack: entity.AttackType{
+			ID:     uuid.NewString(),
+			Params: map[string]any{},
+			Body:   tmpl,
+		},
+		AttackParams: map[string]any{
+			"sender":  "phish@phish-engine.com",
+			"subject": "Scam",
+		},
+	}}
+
+	simpleRunning := simple
+	simpleRunning[0].Status = entity.CampaignRunning
 
 	tests := []test{{
+		name: "Empty",
+		mock: func() {
+			repo.EXPECT().GetActiveCampaigns().Return(empty, nil)
+		},
+		err: nil,
+	}, {
 		name: "Simple",
 		mock: func() {
-			repo.EXPECT().GetActiveCampaigns().Return(c, nil)
+			repo.EXPECT().GetActiveCampaigns().Return(simple, nil)
+			repo.EXPECT().UpdateCampaign(simpleRunning[0]).Return(simpleRunning[0], nil)
 		},
-		res: c,
 		err: nil,
 	}}
 
 	for _, v := range tests {
 		t.Run(v.name, func(t *testing.T) {
 			v.mock()
-			campaigns, err := usc.WorkCampaigns()
-
-			require.Equal(t, c, campaigns)
+			err := usc.WorkCampaigns()
 			require.ErrorIs(t, err, v.err)
 		})
 	}
 }
-
-// func TestUsecase_WorkCampaigns(t *testing.T) {
-// 	r, err := rethinkdb.NewClient(context.TODO(), "localhost:28015")
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-//
-// 	start, _ := time.Parse(time.RFC3339, time.Now().String())
-//
-// 	attackMap := map[string]any{
-// 		"sender":  "ceo@phish-engine.com",
-// 		"subject": "Unit-Test",
-// 		"body":    entity.EmailTemplate,
-// 	}
-//
-// 	attack, err := json.Marshal(attackMap)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 		return
-// 	}
-//
-// 	r.AddCampaign(entity.Campaign{
-// 		ID:             uuid.NewString(),
-// 		CreatorID:      uuid.NewString(),
-// 		OrganizationID: uuid.NewString(),
-// 		Title:          fmt.Sprintf("test-campaign-%s", uuid.NewString()),
-// 		Status:         "active",
-// 		StartDate:      start,
-// 		EndDate:        start,
-// 		Attack:         string(attack),
-// 		SuccessRate:    1,
-// 		AttackParams:   map[string]any{"EmployeeName": "Rainer Winkler", "DownloadLink": "govaguard.com", "AttachmentName": "Invoice.pdf", "CompanyName": "GovaGuard"},
-// 		Targets: []entity.Target{{
-// 			ID:             uuid.NewString(),
-// 			OrganizationID: uuid.NewString(),
-// 			EMail:          "target@phish-engine.com",
-// 			Firstname:      "Jon",
-// 			Surname:        "Doe",
-// 			State:          entity.StateActive,
-// 		}},
-// 	})
-//
-// 	s := mail.Sender{
-// 		Sender:     "mock@phish-engine.com",
-// 		User:       "mock",
-// 		Password:   "mock",
-// 		Host:       "127.0.0.1",
-// 		SMTPServer: "127.0.0.1:2525",
-// 	}
-//
-// 	type fields struct {
-// 		repository *rethinkdb.Client
-// 	}
-// 	tests := []struct {
-// 		name    string
-// 		fields  fields
-// 		wantErr bool
-// 	}{
-// 		{name: "Simple", fields: fields{r}, wantErr: false},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			usc := &Usecase{
-// 				smtp:       s,
-// 				repository: tt.fields.repository,
-// 			}
-// 			if err := usc.WorkCampaigns(); (err != nil) != tt.wantErr {
-// 				t.Errorf("Usecase.WorkCampaigns() error = %v, wantErr %v", err, tt.wantErr)
-// 			}
-// 		})
-// 	}
-// }

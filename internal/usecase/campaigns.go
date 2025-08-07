@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"fmt"
 	"log"
 	"slices"
 
@@ -19,12 +20,15 @@ func New(c repository.CampaignRepo, t repository.TargetsRepo, m mail.Sender) *Us
 	return &Usecase{repository: c, targetRepository: t, smtp: m}
 }
 
-func (usc *Usecase) AddCampaign(c entity.Campaign) error {
-	if err := usc.repository.AddCampaign(c); err != nil {
-		return err
+func (usc *Usecase) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
+	c.Status = entity.CampaignPlanned
+
+	cmp, err := usc.repository.AddCampaign(c)
+	if err != nil {
+		return cmp, err
 	}
 
-	return nil
+	return cmp, nil
 }
 
 func (usc *Usecase) GetCampaigns(orgID string) ([]entity.Campaign, error) {
@@ -53,48 +57,47 @@ func (usc *Usecase) DeleteAllCampaigns() error {
 	return usc.repository.DeleteAllCampaigns()
 }
 
-func (usc *Usecase) WorkCampaigns() ([]entity.Campaign, error) {
+func (usc *Usecase) WorkCampaigns() error {
 	campaigns, err := usc.repository.GetActiveCampaigns()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	noErrorCampaigns := []entity.Campaign{}
+	errorFunc := func(c entity.Campaign, err error) {
+		log.Println("erorr occured", err)
+		c.Status = entity.CampaignError
+		_, err = usc.repository.UpdateCampaign(c)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
 	for values := range slices.Values(campaigns) {
-		for target := range slices.Values(values.Targets) {
-			if target.State != entity.StateCompleted {
 
-				attack, err := entity.NewAttackDownload(values.Attack)
-				if err != nil {
-					return noErrorCampaigns, err
-				}
+		values.Status = entity.CampaignRunning
 
-				body, err := attack.Template(values.AttackParams)
-				if err != nil {
-					return noErrorCampaigns, err
-				}
-
-				// In order to be able to send out multi targets in the
-				// future this function already takes in mulitple
-				// recipients
-				m := attack.GenerateMail([]string{target.EMail}, body)
-
-				state := target.State
-				if err := usc.smtp.SendMail(m); err != nil {
-					log.Println(err)
-					state = entity.StateError
-					continue
-				}
-
-				state = entity.StateCompleted
-				if err := usc.targetRepository.ChangeTargetState(target.ID, state); err != nil {
-					log.Println(err)
-				}
-			}
+		attack, err := values.Attack.GenerateMail(values.AttackParams, values.Targets)
+		if err != nil {
+			errorFunc(values, err)
+			continue
 		}
 
-		noErrorCampaigns = append(noErrorCampaigns, values)
+		if err := usc.smtp.SendMail(attack); err != nil {
+			errorFunc(values, err)
+			continue
+		}
+
+		log.Println(
+			fmt.Sprintf(
+				"campaign %s switches from %s to %s", values.ID, values.Status, entity.CampaignCompleted))
+
+		values.Status = entity.CampaignCompleted
+		_, err = usc.repository.UpdateCampaign(values)
+		if err != nil {
+			return fmt.Errorf("failed updating campaign: %s %w", values.ID, err)
+		}
+
 	}
 
-	return noErrorCampaigns, nil
+	return nil
 }

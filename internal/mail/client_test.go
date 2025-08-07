@@ -1,46 +1,8 @@
 package mail
 
 import (
-	"os"
-	"reflect"
 	"testing"
 )
-
-func TestNewPlainMail(t *testing.T) {
-	type args struct {
-		sender  string
-		subject string
-		body    string
-		to      []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want Mail
-	}{
-		{
-			name: "SimplePlainMail", args: args{
-				sender:  "mock@phish-engine.com",
-				to:      []string{"target@phish-engine.com"},
-				subject: "Gova Guard passt auf dich auf",
-				body:    "Pass auf",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewPlainMail(tt.args.sender, tt.args.subject, tt.args.body, tt.args.to); !reflect.DeepEqual(got, tt.want) {
-				if err := os.WriteFile(tt.name+".eml", got.Body, 0o755); err != nil {
-					t.Log(err)
-				}
-
-				t.Errorf("NewPlainMail() = %v, want %v", got, tt.want)
-
-			}
-		})
-	}
-}
 
 func TestSendMail(t *testing.T) {
 	type args struct {

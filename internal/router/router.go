@@ -27,6 +27,7 @@ func (router *Router) Run(port int) error {
 	mux.Handle("DELETE /api/campaigns/{id}", http.HandlerFunc(router.DeleteCampaign))
 	mux.Handle("GET /api/targets", http.HandlerFunc(router.GetTargets))
 	mux.Handle("POST /api/targets", http.HandlerFunc(router.AddTargets))
+	mux.Handle("DELETE /api/targets/{id}", http.HandlerFunc(router.DeleteTarget))
 
 	handler := cors.AllowAll().Handler(mux)
 	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%v", port), handler); err != nil {

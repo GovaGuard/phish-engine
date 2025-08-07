@@ -1,8 +1,6 @@
 package usecase
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 	"github.com/holgerson97/phish-engine/entity"
 )
@@ -14,7 +12,6 @@ func (usc *Usecase) AddTarget(org string, t []entity.Target) ([]entity.Target, e
 		t[key].OrganizationID = org
 	}
 
-	fmt.Println(t)
 	result, err := usc.targetRepository.AddTargets(t)
 	if err != nil {
 		return nil, err

@@ -35,6 +35,20 @@ func (router *Router) GetCampaigns(w http.ResponseWriter, r *http.Request) {
 }
 
 func (router *Router) AddCampaign(w http.ResponseWriter, r *http.Request) {
+	id, err := parseOrganization(*r)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		log.Println(err)
+		return
+	}
+
+	userID, err := parseToken(*r)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		log.Println(err)
+		return
+	}
+
 	var campaign entity.Campaign
 	if err := json.NewDecoder(r.Body).Decode(&campaign); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -43,12 +57,21 @@ func (router *Router) AddCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := router.usecase.AddCampaign(campaign); err != nil {
+	// TODO: This maybe needs to be reworked
+	campaign.OrganizationID = id
+	campaign.CreatorID = userID
+
+	result, err := router.usecase.AddCampaign(campaign)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed creating campaign"))
+		log.Println(err)
 		return
-
 	}
+
+	resp, err := json.Marshal(result)
+
+	w.Write(resp)
 
 	return
 }

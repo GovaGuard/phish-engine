@@ -1,4 +1,4 @@
-package rethinkdb
+package mongodb
 
 import (
 	"context"

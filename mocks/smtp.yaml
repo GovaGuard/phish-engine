@@ -1,9 +1,28 @@
-smtp: '1.0'
+mail: '1.0'
+
+log:
+  level: debug
+
 info:
   title: Mokapi's Mail Server
+
+providers:
+  rootCaCert: /demo/ca.crt
+  rootCaKey: /demo/ca.key
+
 servers: 
-- url: smtp://127.0.0.1:25
+  smtp:
+    host: localhost:25
+    protocol: "smtp"
+rules:
+  recipientDomainIsMokapi:
+    recipient: '@phish-engine.com'
+    action: allow
+
 mailboxes:
-  - name: mock@phish-engine.com
+  mock@phish-engine.com:
     username: mock 
     password: mock 
+  phish@phish-engine.com:
+    username: mock 
+    password: mock    

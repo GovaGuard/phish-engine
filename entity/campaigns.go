@@ -96,46 +96,33 @@ func (attack *AttackType) GenerateMail(params map[string]any, t []Target) (mail.
 		return m, errors.New("attack has wrong params")
 	}
 
+	// TODO: Parse Attack dynamically via Attack ID
+	attack.Params = GetInvoiceAttack().Params
+	attack.Body = GetInvoiceAttack().Body
+
 	if err := attack.Body.Execute(buf, params); err != nil {
 		return m, err
 	}
 
-	// body := buf.String()
+	body := buf.String()
 
 	to := make([]string, 0)
 	for value := range slices.Values(t) {
 		to = append(to, value.EMail)
 	}
 
-	// m = mail.NewPlainMail(params["sender"]), params["subject"], body, to)
+	// TODO: Make good
+	sender, ok := params["sender"].(string)
+	if !ok {
+		return m, errors.New("failed parsing sender")
+	}
+
+	subject, ok := attack.Params["subject"].(string)
+	if !ok {
+		return m, errors.New("failed parsing subject")
+	}
+
+	m = mail.NewPlainMail(sender, subject, body, to)
 
 	return m, nil
 }
-
-//
-// type AttackDownload struct {
-// 	Sender       string `binding:"required" json:"sender"`
-// 	Subject      string `binding:"required" json:"subject"`
-// 	BodyTemplate *template.Template
-// }
-//
-// func NewAttackDownload(body string) (AttackDownload, error) {
-// 	var attackBody map[string]any
-// 	var attack AttackDownload
-//
-// 	if err := json.Unmarshal([]byte(body), &attackBody); err != nil {
-// 		return attack, err
-// 	}
-//
-// 	t, ok := attackBody["body"].(string)
-// 	if !ok {
-// 		return AttackDownload{}, fmt.Errorf("failed unmarshalling attack body")
-// 	}
-//
-// 	tmpl, err := template.New("phishingEmail").Parse(t)
-// 	if err != nil {
-// 		return AttackDownload{}, err
-// 	}
-//
-// 	return AttackDownload{BodyTemplate: tmpl}, nil
-// }
