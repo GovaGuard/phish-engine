@@ -97,6 +97,7 @@ func (attack *AttackType) GenerateMail(params map[string]any, t []Target) (mail.
 	}
 
 	// TODO: Parse Attack dynamically via Attack ID
+	// Issue URL: https://github.com/GovaGuard/phish-engine/issues/18
 	attack.Params = GetInvoiceAttack().Params
 	attack.Body = GetInvoiceAttack().Body
 
@@ -112,6 +113,7 @@ func (attack *AttackType) GenerateMail(params map[string]any, t []Target) (mail.
 	}
 
 	// TODO: Make good
+	// Issue URL: https://github.com/GovaGuard/phish-engine/issues/17
 	sender, ok := params["sender"].(string)
 	if !ok {
 		return m, errors.New("failed parsing sender")

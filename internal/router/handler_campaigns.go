@@ -58,6 +58,7 @@ func (router *Router) AddCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: This maybe needs to be reworked
+	// Issue URL: https://github.com/GovaGuard/phish-engine/issues/19
 	campaign.OrganizationID = id
 	campaign.CreatorID = userID
 
