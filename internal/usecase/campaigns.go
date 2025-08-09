@@ -64,7 +64,7 @@ func (usc *Usecase) WorkCampaigns() error {
 	}
 
 	errorFunc := func(c entity.Campaign, err error) {
-		log.Println("erorr occured", err)
+		log.Println("error occured", err)
 		c.Status = entity.CampaignError
 		_, err = usc.repository.UpdateCampaign(c)
 		if err != nil {
