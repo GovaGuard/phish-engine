@@ -1,4 +1,4 @@
-package rethinkdb
+package mongodb
 
 import (
 	"context"
@@ -14,7 +14,11 @@ const (
 
 func (cl *Client) GetActiveCampaigns() ([]entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
-	filter := bson.D{{Key: "status", Value: entity.StateActive}}
+	filter := bson.D{
+		{Key: "status", Value: bson.D{
+			{Key: "$in", Value: bson.A{entity.CampaignPlanned, entity.CampaignRunning}},
+		}},
+	}
 
 	cursor, err := coll.Find(context.TODO(), filter)
 	if err != nil {
@@ -46,15 +50,27 @@ func (cl *Client) GetCampaigns(orgID string) ([]entity.Campaign, error) {
 	return result, nil
 }
 
-func (cl *Client) AddCampaign(c entity.Campaign) error {
+func (cl *Client) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
 
 	_, err := coll.InsertOne(context.TODO(), c)
 	if err != nil {
-		return fmt.Errorf("adding campaign: %w", err)
+		return entity.Campaign{}, fmt.Errorf("adding campaign: %w", err)
 	}
 
-	return nil
+	return c, nil
+}
+
+func (cl *Client) UpdateCampaign(c entity.Campaign) (entity.Campaign, error) {
+	coll := cl.Client.Database("main").Collection(campgainTable)
+	filter := bson.D{{Key: "_id", Value: c.ID}}
+
+	_, err := coll.ReplaceOne(context.TODO(), filter, c)
+	if err != nil {
+		return entity.Campaign{}, fmt.Errorf("updating campaign: %w", err)
+	}
+
+	return c, nil
 }
 
 func (cl *Client) DeleteCampaign(id string) error {

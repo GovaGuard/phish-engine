@@ -1,0 +1,11 @@
+From: mock@phish-engine.com
+To: target@phish-engine.com
+Subject: Gova Guard passt auf dich auf
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=mail-boundary
+
+--mail-boundary
+Content-Type: text/plain; charset="utf-8"
+
+Pass auf
+--mail-boundary--

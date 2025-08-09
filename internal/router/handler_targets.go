@@ -1,10 +1,8 @@
 package router
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 
@@ -45,28 +43,11 @@ func (router *Router) AddTargets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
+	var target []entity.Target
+	if err = json.NewDecoder(r.Body).Decode(&target); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		log.Println(err)
 		return
-	}
-
-	var target []entity.Target
-	if bytes.HasPrefix(bytes.TrimSpace(body), []byte("[")) {
-		if err := json.NewDecoder(r.Body).Decode(&target); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Println(err)
-			return
-		}
-	} else {
-		var t entity.Target
-		if err := json.Unmarshal(body, &t); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			log.Println(err)
-			return
-		}
-
-		target = append(target, t)
 	}
 
 	result, err := router.usecase.AddTarget(id, target)
@@ -93,11 +74,11 @@ func (router *Router) DeleteTarget(w http.ResponseWriter, r *http.Request) {
 	if err := router.usecase.DeleteTarget(targetID); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("failed deleting target"))
+		log.Println("failed deleting")
 		return
 
 	}
 
 	w.Write([]byte(fmt.Sprintf("delete %s succesfully", targetID)))
-
 	return
 }

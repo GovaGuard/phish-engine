@@ -34,7 +34,7 @@ func (s *Sender) SendMail(m Mail) error {
 
 	// SendMail cannot perform DKIM signing. This is currently inherited by our E-Mail provided and technically not yet needed.
 	if err := smtp.SendMail(s.SMTPServer, auth, m.Sender, m.To, m.Body); err != nil {
-		return err
+		return fmt.Errorf("failed sending mail %w", err)
 	}
 
 	return nil

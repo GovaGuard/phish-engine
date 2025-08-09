@@ -41,11 +41,12 @@ func (m *MockCampaignRepo) EXPECT() *MockCampaignRepoMockRecorder {
 }
 
 // AddCampaign mocks base method.
-func (m *MockCampaignRepo) AddCampaign(arg0 entity.Campaign) error {
+func (m *MockCampaignRepo) AddCampaign(arg0 entity.Campaign) (entity.Campaign, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddCampaign", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(entity.Campaign)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddCampaign indicates an expected call of AddCampaign.
@@ -110,6 +111,21 @@ func (m *MockCampaignRepo) GetCampaigns(arg0 string) ([]entity.Campaign, error) 
 func (mr *MockCampaignRepoMockRecorder) GetCampaigns(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCampaigns", reflect.TypeOf((*MockCampaignRepo)(nil).GetCampaigns), arg0)
+}
+
+// UpdateCampaign mocks base method.
+func (m *MockCampaignRepo) UpdateCampaign(arg0 entity.Campaign) (entity.Campaign, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateCampaign", arg0)
+	ret0, _ := ret[0].(entity.Campaign)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateCampaign indicates an expected call of UpdateCampaign.
+func (mr *MockCampaignRepoMockRecorder) UpdateCampaign(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCampaign", reflect.TypeOf((*MockCampaignRepo)(nil).UpdateCampaign), arg0)
 }
 
 // MockTargetsRepo is a mock of TargetsRepo interface.

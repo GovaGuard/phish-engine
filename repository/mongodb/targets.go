@@ -1,4 +1,4 @@
-package rethinkdb
+package mongodb
 
 import (
 	"context"
@@ -30,9 +30,19 @@ func (cl *Client) GetTargets(orgID string) ([]entity.Target, error) {
 func (cl *Client) AddTargets(t []entity.Target) ([]entity.Target, error) {
 	coll := cl.Client.Database("main").Collection(targetTable)
 
-	_, err := coll.InsertOne(context.TODO(), t)
+	if len(t) == 1 {
+		_, err := coll.InsertOne(context.TODO(), t[0])
+		if err != nil {
+			return []entity.Target{}, fmt.Errorf("adding target: %w", err)
+		}
+
+		return t, nil
+	}
+
+	docs := []any{t}
+	_, err := coll.InsertMany(context.TODO(), docs)
 	if err != nil {
-		return []entity.Target{}, fmt.Errorf("adding target: %w", err)
+		return []entity.Target{}, fmt.Errorf("adding targets: %w", err)
 	}
 
 	return t, nil
