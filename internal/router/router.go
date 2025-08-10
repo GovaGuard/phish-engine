@@ -9,6 +9,7 @@ import (
 )
 
 type Router struct {
+	// TODO: Should be the interface
 	usecase *usecase.Usecase
 }
 
@@ -25,6 +26,8 @@ func (router *Router) Run(port int) error {
 	mux.Handle("GET /api/campaigns", http.HandlerFunc(router.GetCampaigns))
 	mux.Handle("POST /api/campaigns", http.HandlerFunc(router.AddCampaign))
 	mux.Handle("DELETE /api/campaigns/{id}", http.HandlerFunc(router.DeleteCampaign))
+	mux.Handle("GET /api/campaigns/{id}/{target_id}", http.HandlerFunc(router.PhishAction))
+
 	mux.Handle("GET /api/targets", http.HandlerFunc(router.GetTargets))
 	mux.Handle("POST /api/targets", http.HandlerFunc(router.AddTargets))
 	mux.Handle("DELETE /api/targets/{id}", http.HandlerFunc(router.DeleteTarget))
