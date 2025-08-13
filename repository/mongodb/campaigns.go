@@ -59,7 +59,6 @@ func (cl *Client) GetCampaign(campaignID string) (entity.Campaign, error) {
 	var campaign entity.Campaign
 
 	if err := coll.FindOne(context.TODO(), filter, opts).Decode(&campaign); err != nil {
-		fmt.Println(err)
 		return campaign, fmt.Errorf("parsing campaign to entity: %w", err)
 	}
 
@@ -97,7 +96,7 @@ func (cl *Client) UpdateCampaign(c entity.Campaign) (entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
 	filter := bson.D{{Key: "_id", Value: c.ID}}
 
-	_, err := coll.ReplaceOne(context.TODO(), filter, c)
+	_, err := coll.UpdateOne(context.TODO(), filter, c)
 	if err != nil {
 		return entity.Campaign{}, fmt.Errorf("updating campaign: %w", err)
 	}

@@ -80,7 +80,6 @@ func (usc *Usecase) TargetPhished(campaignID string, targetID string) error {
 		return &CampaignNotFoundError{ID: campaignID}
 	}
 
-	fmt.Println(campaign)
 	for k, t := range campaign.Targets {
 		if t.ID == targetID {
 
@@ -89,8 +88,6 @@ func (usc *Usecase) TargetPhished(campaignID string, targetID string) error {
 			if err != nil {
 				return err
 			}
-
-			fmt.Println("SUCCESS", campaign.Targets)
 
 			return nil
 		}
