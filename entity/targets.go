@@ -7,6 +7,7 @@ const (
 	StateCompleted
 	StateError
 	StateRetrying
+	StateSuccess
 )
 
 var stateName = map[TargetState]string{
@@ -14,6 +15,7 @@ var stateName = map[TargetState]string{
 	StateCompleted: "completed",
 	StateError:     "error",
 	StateRetrying:  "retrying",
+	StateSuccess:   "success",
 }
 
 func (ts TargetState) String() string {

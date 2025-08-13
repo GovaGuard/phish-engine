@@ -6,6 +6,7 @@ import (
 
 	"github.com/holgerson97/phish-engine/entity"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -50,6 +51,20 @@ func (cl *Client) GetCampaigns(orgID string) ([]entity.Campaign, error) {
 	return result, nil
 }
 
+func (cl *Client) GetCampaign(campaignID string) (entity.Campaign, error) {
+	coll := cl.Client.Database("main").Collection(campgainTable)
+	filter := bson.D{{Key: "creator_id", Value: "314920484783891083"}}
+	opts := options.FindOne().SetProjection(bson.D{{Key: "targets", Value: 1}})
+
+	var campaign entity.Campaign
+
+	if err := coll.FindOne(context.TODO(), filter, opts).Decode(&campaign); err != nil {
+		return campaign, fmt.Errorf("parsing campaign to entity: %w", err)
+	}
+
+	return campaign, nil
+}
+
 func (cl *Client) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
 
@@ -61,11 +76,27 @@ func (cl *Client) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
 	return c, nil
 }
 
+func (cl *Client) UpdateCampaignTargets(c entity.Campaign) (entity.Campaign, error) {
+	coll := cl.Client.Database("main").Collection(campgainTable)
+
+	filter := bson.D{{Key: "creator_id", Value: "314920484783891083"}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "targets", Value: c.Targets},
+	}}}
+
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return entity.Campaign{}, fmt.Errorf("updating campaign: %w", err)
+	}
+
+	return c, nil
+}
+
 func (cl *Client) UpdateCampaign(c entity.Campaign) (entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
 	filter := bson.D{{Key: "_id", Value: c.ID}}
 
-	_, err := coll.ReplaceOne(context.TODO(), filter, c)
+	_, err := coll.UpdateOne(context.TODO(), filter, c)
 	if err != nil {
 		return entity.Campaign{}, fmt.Errorf("updating campaign: %w", err)
 	}

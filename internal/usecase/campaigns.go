@@ -10,6 +10,23 @@ import (
 	"github.com/holgerson97/phish-engine/repository"
 )
 
+// TODO: Add error for campaign is not runngin anymore
+type CampaignNotFoundError struct {
+	ID string
+}
+
+func (e *CampaignNotFoundError) Error() string {
+	return fmt.Sprintf("campaign %s not found", e.ID)
+}
+
+type TargetNotFoundInCampaign struct {
+	CampaignID, ID string
+}
+
+func (e *TargetNotFoundInCampaign) Error() string {
+	return fmt.Sprintf("campaign %s does not contain target %s", e.CampaignID, e.ID)
+}
+
 type Usecase struct {
 	smtp             mail.Sender
 	repository       repository.CampaignRepo
@@ -55,6 +72,28 @@ func (usc *Usecase) DeleteCampaign(id string) error {
 
 func (usc *Usecase) DeleteAllCampaigns() error {
 	return usc.repository.DeleteAllCampaigns()
+}
+
+func (usc *Usecase) TargetPhished(campaignID string, targetID string) error {
+	campaign, err := usc.repository.GetCampaign(campaignID)
+	if err != nil {
+		return &CampaignNotFoundError{ID: campaignID}
+	}
+
+	for k, t := range campaign.Targets {
+		if t.ID == targetID {
+
+			campaign.Targets[k].State = entity.StateSuccess
+			campaign, err = usc.repository.UpdateCampaignTargets(campaign)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return &TargetNotFoundInCampaign{CampaignID: campaignID, ID: targetID}
 }
 
 func (usc *Usecase) WorkCampaigns() error {
