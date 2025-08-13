@@ -10,6 +10,7 @@ import (
 
 type Router struct {
 	// TODO: Should be the interface
+	// Issue URL: https://github.com/GovaGuard/phish-engine/issues/25
 	usecase *usecase.Usecase
 }
 

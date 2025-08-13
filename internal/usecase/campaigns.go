@@ -11,6 +11,7 @@ import (
 )
 
 // TODO: Add error for campaign is not runngin anymore
+// Issue URL: https://github.com/GovaGuard/phish-engine/issues/26
 type CampaignNotFoundError struct {
 	ID string
 }
