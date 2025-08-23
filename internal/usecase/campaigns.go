@@ -5,6 +5,7 @@ import (
 	"log"
 	"slices"
 
+	"github.com/google/uuid"
 	"github.com/holgerson97/phish-engine/entity"
 	"github.com/holgerson97/phish-engine/internal/mail"
 	"github.com/holgerson97/phish-engine/repository"
@@ -38,6 +39,7 @@ func New(c repository.CampaignRepo, t repository.TargetsRepo, m mail.Sender) *Us
 }
 
 func (usc *Usecase) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
+	c.ID = uuid.New().String()
 	c.Status = entity.CampaignPlanned
 
 	cmp, err := usc.repository.AddCampaign(c)
@@ -103,9 +105,9 @@ func (usc *Usecase) WorkCampaigns() error {
 	}
 
 	errorFunc := func(c entity.Campaign, err error) {
-		log.Println("error occured", err)
+		log.Println(fmt.Errorf("error occured in campaign: %s: %s", c.ID, err))
 		c.Status = entity.CampaignError
-		_, err = usc.repository.UpdateCampaign(c)
+		_, err = usc.repository.UpdateCampaignStatus(c)
 		if err != nil {
 			log.Println(err)
 		}
