@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/holgerson97/phish-engine/entity"
@@ -42,6 +43,13 @@ func New(c repository.CampaignRepo, t repository.TargetsRepo, m mail.Sender) *Us
 func (usc *Usecase) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
 	c.ID = uuid.New().String()
 	c.Status = entity.CampaignPlanned
+
+	// TODO: Right now we only support invoice phishing with fixed params, these need
+	// to be refactored
+	c.AttackParams = map[string]any{
+		"sender":  "phish@phish-engine.com",
+		"subject": "Invoice Payment",
+	}
 
 	cmp, err := usc.repository.AddCampaign(c)
 	if err != nil {
@@ -105,6 +113,24 @@ func (usc *Usecase) WorkCampaigns() error {
 		return err
 	}
 
+	for campaign := range slices.Values(campaigns) {
+
+		// TODO: Move this to a DB querry
+		campaign = usc.CheckState(campaign)
+		if campaign.Status == entity.CampaignRunning {
+			usc.RunCampaign(campaign)
+		}
+
+		_, err = usc.repository.UpdateCampaignStatus(campaign)
+		if err != nil {
+			return fmt.Errorf("failed updating campaign: %s %w", campaign.ID, err)
+		}
+
+	}
+	return nil
+}
+
+func (usc *Usecase) RunCampaign(c entity.Campaign) error {
 	errorFunc := func(c entity.Campaign, err error) {
 		log.Println(fmt.Errorf("error occured in campaign: %s: %s", c.ID, err))
 		c.Status = entity.CampaignError
@@ -114,32 +140,57 @@ func (usc *Usecase) WorkCampaigns() error {
 		}
 	}
 
-	for values := range slices.Values(campaigns) {
-
-		values.Status = entity.CampaignRunning
-
-		attack, err := values.Attack.GenerateMail(values.AttackParams, values.Targets)
-		if err != nil {
-			errorFunc(values, err)
-			continue
+	// TODO: Filter out Targets that have been already hit
+	// Maybe this can be done cleaner, it also should be a usecase function
+	openTargets := []entity.Target{}
+	for t := range slices.Values(c.Targets) {
+		if t.State == entity.StateActive {
+			openTargets = append(openTargets, t)
 		}
+	}
 
-		if err := usc.smtp.SendMail(attack); err != nil {
-			errorFunc(values, err)
-			continue
-		}
+	attack, err := c.Attack.GenerateMail(c.AttackParams, openTargets)
+	if err != nil {
+		errorFunc(c, err)
+	}
 
-		log.Println(
-			fmt.Sprintf(
-				"campaign %s switches from %s to %s", values.ID, values.Status, entity.CampaignCompleted))
+	if err := usc.smtp.SendMail(attack); err != nil {
+		errorFunc(c, err)
+	}
 
-		values.Status = entity.CampaignCompleted
-		_, err = usc.repository.UpdateCampaign(values)
-		if err != nil {
-			return fmt.Errorf("failed updating campaign: %s %w", values.ID, err)
-		}
-
+	for key := range slices.All(openTargets) {
+		openTargets[key].State = entity.StateCompleted
 	}
 
 	return nil
+}
+
+func (usc *Usecase) EvaluateSuccessRate(c entity.Campaign) entity.Campaign {
+	success := 0
+	for t := range slices.Values(c.Targets) {
+		if t.State == entity.StateSuccess {
+			success++
+		}
+	}
+
+	succesRate := (success / len(c.Targets)) * 100
+	c.SuccessRate = int16(succesRate)
+
+	return c
+}
+
+func (usc *Usecase) CheckState(c entity.Campaign) entity.Campaign {
+	if c.StartDate.Before(time.Now()) {
+		c.Status = entity.CampaignRunning
+	}
+
+	if c.StartDate.After(time.Now()) {
+		c.Status = entity.CampaignPlanned
+	}
+
+	if c.EndDate.Before(time.Now()) {
+		c.Status = entity.CampaignCompleted
+	}
+
+	return c
 }
