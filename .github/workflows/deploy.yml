@@ -10,13 +10,14 @@ env:
 jobs:
   docker-build-and-push:
     runs-on: ubuntu-22.04
+
     permissions:
       contents: read
       packages: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -42,5 +43,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: "1.2"
           labels: ${{ steps.meta.outputs.labels }}
