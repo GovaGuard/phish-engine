@@ -71,7 +71,7 @@ func parseOrganization(r http.Request) (string, error) {
 
 	id, ok := m["urn:zitadel:iam:user:resourceowner:id"].(string)
 	if !ok {
-		return "", fmt.Errorf("Organization doesn't exist")
+		return "", fmt.Errorf("Organization doesn't exist: %s", id)
 	}
 
 	return id, nil
