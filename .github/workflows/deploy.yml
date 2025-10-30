@@ -2,6 +2,8 @@ name: Build Docker image
 
 on:
   push:
+    tags:
+      - "*"
 
 env:
   IMAGE_NAME: ${{ github.repository }}
