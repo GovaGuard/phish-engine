@@ -9,6 +9,7 @@ type (
 		GetCampaign(string) (entity.Campaign, error)
 		AddCampaign(entity.Campaign) (entity.Campaign, error)
 		UpdateCampaign(entity.Campaign) (entity.Campaign, error)
+		UpdateCampaignStatus(entity.Campaign) (entity.Campaign, error)
 		UpdateCampaignTargets(entity.Campaign) (entity.Campaign, error)
 		DeleteCampaign(string) error
 		DeleteAllCampaigns() error

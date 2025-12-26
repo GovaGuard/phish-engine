@@ -79,7 +79,7 @@ func (cl *Client) AddCampaign(c entity.Campaign) (entity.Campaign, error) {
 func (cl *Client) UpdateCampaignTargets(c entity.Campaign) (entity.Campaign, error) {
 	coll := cl.Client.Database("main").Collection(campgainTable)
 
-	filter := bson.D{{Key: "creator_id", Value: "314920484783891083"}}
+	filter := bson.D{{Key: "id", Value: c.ID}}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "targets", Value: c.Targets},
 	}}}
@@ -87,6 +87,22 @@ func (cl *Client) UpdateCampaignTargets(c entity.Campaign) (entity.Campaign, err
 	_, err := coll.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return entity.Campaign{}, fmt.Errorf("updating campaign: %w", err)
+	}
+
+	return c, nil
+}
+
+func (cl *Client) UpdateCampaignStatus(c entity.Campaign) (entity.Campaign, error) {
+	coll := cl.Client.Database("main").Collection(campgainTable)
+
+	filter := bson.D{{Key: "id", Value: c.ID}}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "status", Value: c.Status},
+	}}}
+
+	_, err := coll.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return entity.Campaign{}, fmt.Errorf("updating campaign state: %w", err)
 	}
 
 	return c, nil

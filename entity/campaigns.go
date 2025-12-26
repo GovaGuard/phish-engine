@@ -39,7 +39,7 @@ func (cs CampaignState) String() string {
 }
 
 type Campaign struct {
-	ID             string         `json:"id" bson:"_id,omitempty"`
+	ID             string         `json:"id" bson:"id,omitempty"`
 	CreatorID      string         `json:"creator_id" bson:"creator_id"`
 	OrganizationID string         `json:"organization_id" bson:"organization_id"`
 	Title          string         `binding:"required" json:"title" bson:"title"`
